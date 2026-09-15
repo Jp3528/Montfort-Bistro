@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONTFORT BISTRO — Desayunos & Almuerzos de Autor</title>
+  <meta name="description" content="Sistema web gastronómico de Montfort Bistro: desayunos artesanales, almuerzos de autor, menú digital interactivo, carta fotográfica y reservas en línea." />
+
+  <!-- Tipografías Google Fonts (Editorial Gastronómico & Suiza) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Iconos Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Three.js para Efectos 3D WebGL en Tiempo Real -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DISEÑO Y TIPOGRAFÍA FLUIDA
+       ========================================================================== */
+    :root {
+      --bistro-amber: #C88A3E;
+      --bistro-amber-light: #E5A95D;
+      --bistro-amber-glow: rgba(200, 138, 62, 0.35);
+      --bistro-terracotta: #B8502E;
+      
+      --bistro-dark: #0F0C0A;
+      --bistro-dark-card: rgba(24, 19, 16, 0.88);
+      --bistro-dark-elevated: rgba(36, 28, 23, 0.95);
+      
+      --bistro-cream: #FAF6F0;
+      --bistro-sand: #F2E9DC;
+      --bistro-white: #FFFFFF;
+      
+      --text-dark-primary: #140E0A;
+      --text-dark-secondary: #584C44;
+      --text-light-primary: #FAF6F0;
+      --text-light-secondary: #B5A79C;
+      
+      --border-light: rgba(200, 138, 62, 0.22);
+      --border-dark: rgba(255, 255, 255, 0.1);
+      
+      --font-display: 'Playfair Display', serif;
+      --font-accent: 'Syne', sans-serif;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      
+      --transition-smooth: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-spring: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      background-color: var(--bistro-cream);
+      color: var(--text-dark-primary);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.6;
+    }
+
+    ::selection {
+      background: var(--bistro-amber);
+      color: #FFFFFF;
+    }
+
+    /* Fondo 3D WebGL (Partículas de brasas/especias flotantes) */
+    #webgl-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.7;
+    }
+
+    /* Cursor Personalizado Gastronómico */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 8px;
+      height: 8px;
+      background-color: var(--bistro-amber);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+
+    .custom-cursor-follower {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(200, 138, 62, 0.45);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, border-color 0.3s ease;
+    }
+
+    body.cursor-hover .custom-cursor {
+      width: 4px;
+      height: 4px;
+    }
+
+    body.cursor-hover .custom-cursor-follower {
+      width: 52px;
+      height: 52px;
+      border-color: var(--bistro-amber);
+      background-color: rgba(200, 138, 62, 0.08);
+    }
+
+    @media (pointer: coarse) {
+      .custom-cursor, .custom-cursor-follower {
+        display: none !important;
+      }
+    }
+
+    /* ==========================================================================
+       TIPOGRAFÍA FLUIDA Y CONTENEDORES
+       ========================================================================== */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+    }
+
+    .font-heading {
+      font-family: var(--font-heading);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ==========================================================================
+       HEADER & NAVEGACIÓN
+       ========================================================================== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 18px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 500;
+      transition: var(--transition-smooth);
+      background: transparent;
+    }
+
+    .header.scrolled {
+      padding: 12px 36px;
+      background: rgba(250, 246, 240, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-dark-primary);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.2rem, 2.2vw, 1.45rem);
+      letter-spacing: 0.02em;
+    }
+
+    .brand-logo span.accent {
+      color: var(--bistro-amber);
+      font-style: italic;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-link {
+      font-size: clamp(0.8rem, 1vw, 0.875rem);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dark-primary);
+      text-decoration: none;
+      position: relative;
+      padding: 6px 0;
+      transition: var(--transition-smooth);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background-color: var(--bistro-amber);
+      transition: var(--transition-smooth);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .nav-link:hover {
+      color: var(--bistro-amber);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(46, 133, 64, 0.1);
+      border: 1px solid rgba(46, 133, 64, 0.25);
+      color: #236B34;
+      font-size: clamp(0.7rem, 0.9vw, 0.75rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2E8540;
+      box-shadow: 0 0 8px #2E8540;
+      animation: pulseDot 1.8s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.5; }
+    }
+
+    .btn-reserve {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      background: var(--bistro-amber);
+      color: #FFFFFF;
+      font-size: clamp(0.78rem, 1vw, 0.85rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--bistro-amber-glow);
+      transition: var(--transition-smooth);
+    }
+
+    .btn-reserve:hover {
+      background: #B47830;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--bistro-amber-glow);
+    }
+
+    /* ==========================================================================
+       HERO SECTION CON TILT 3D GASTRONÓMICO & IMAGEN GOURMET
+       ========================================================================== */
+    .hero-section {
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 130px 0 70px 0;
+      perspective: 1200px;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 50px;
+      align-items: center;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+    }
+
+    .hero-tag {
+      font-family: var(--font-accent);
+      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      font-weight: 700;
+      color: var(--bistro-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 4.6vw, 4.4rem);
+      font-weight: 700;
+      color: var(--bistro-dark);
+      line-height: 1.08;
+      margin-bottom: 20px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--bistro-amber);
+      font-weight: 400;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(0.98rem, 1.3vw, 1.15rem);
+      color: var(--text-dark-secondary);
+      max-width: 520px;
+      line-height: 1.68;
+      margin-bottom: 32px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 38px;
+    }
+
+    .btn-secondary-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 9999px;
+      border: 1px solid var(--border-light);
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      color: var(--text-dark-primary);
+      font-size: clamp(0.8rem, 1vw, 0.88rem);
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-secondary-outline:hover {
+      border-color: var(--bistro-amber);
+      color: var(--bistro-amber);
+      transform: translateY(-2px);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 30px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .stat-item h4 {
+      font-family: var(--font-accent);
+      font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+      font-weight: 800;
+      color: var(--bistro-dark);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-item p {
+      font-size: clamp(0.72rem, 0.9vw, 0.78rem);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dark-secondary);
+    }
+
+    /* Escenario Visual 3D del Plato Insignia */
+    .hero-3d-stage {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+    }
+
+    .dish-card-3d {
+      width: 100%;
+      max-width: 480px;
+      border-radius: 32px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      box-shadow: 0 25px 70px rgba(18, 13, 9, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+    }
+
+    .hero-image-wrap {
+      width: 100%;
+      height: 340px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .dish-card-3d:hover .hero-image-wrap img {
+      transform: scale(1.06);
+    }
+
+    .hero-card-details {
+      padding: 22px 26px;
+      background: #FFFFFF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transform: translateZ(30px);
+    }
+
+    .dish-badge-floating {
+      position: absolute;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--border-light);
+      backdrop-filter: blur(12px);
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(0.75rem, 0.9vw, 0.82rem);
+      font-weight: 700;
+      color: var(--bistro-dark);
+      transform: translateZ(50px);
+      animation: floatBadge 4s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    .badge-top-left { top: 16px; left: 16px; }
+    .badge-bottom-right { bottom: 85px; right: 16px; animation-delay: 2s; }
+
+    @keyframes floatBadge {
+      0%, 100% { transform: translateZ(50px) translateY(0px); }
+      50% { transform: translateZ(50px) translateY(-8px); }
+    }
+
+    /* ==========================================================================
+       SECCIÓN: MENÚ DIGITAL CON FOTOGRAFÍAS REALISTAS
+       ========================================================================== */
+    .menu-section {
+      padding: 120px 0;
+      background-color: var(--bistro-white);
+      border-top: 1px solid var(--border-light);
+      position: relative;
+    }
+
+    .menu-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 50px auto;
+    }
+
+    .menu-header .tag {
+      color: var(--bistro-amber);
+      font-family: var(--font-accent);
+      font-size: clamp(0.75rem, 1vw, 0.85rem);
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .menu-header h2 {
+      font-size: clamp(2rem, 3.5vw, 3.2rem);
+      margin-bottom: 14px;
+    }
+
+    /* Pestañas de Turno */
+    .meal-tabs-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 44px;
+      flex-wrap: wrap;
+    }
+
+    .meal-tab {
+      padding: 12px 26px;
+      border-radius: 9999px;
+      border: 1px solid var(--border-light);
+      background: var(--bistro-cream);
+      color: var(--text-dark-secondary);
+      font-family: var(--font-heading);
+      font-size: clamp(0.82rem, 1vw, 0.9rem);
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+    }
+
+    .meal-tab.active {
+      background: var(--bistro-dark);
+      color: #FFFFFF;
+      border-color: var(--bistro-dark);
+      box-shadow: 0 8px 20px rgba(18, 13, 9, 0.22);
+    }
+
+    .meal-tab:hover:not(.active) {
+      border-color: var(--bistro-amber);
+      color: var(--bistro-amber);
+    }
+
+    /* Rejilla de Platos */
+    .dishes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 28px;
+    }
+
+    .dish-card {
+      background: var(--bistro-cream);
+      border: 1px solid var(--border-light);
+      border-radius: 22px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    .dish-card:hover {
+      border-color: var(--bistro-amber);
+      box-shadow: 0 18px 45px rgba(200, 138, 62, 0.16);
+      transform: translateY(-4px);
+      background: #FFFFFF;
+    }
+
+    .dish-img-container {
+      width: 100%;
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dish-img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .dish-card:hover .dish-img-container img {
+      transform: scale(1.08);
+    }
+
+    .dish-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .dish-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .dish-title {
+      font-size: clamp(1.2rem, 1.6vw, 1.35rem);
+      font-weight: 700;
+      color: var(--bistro-dark);
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+
+    .dish-price {
+      font-family: var(--font-accent);
+      font-size: clamp(1.25rem, 1.8vw, 1.45rem);
+      font-weight: 800;
+      color: var(--bistro-amber);
+    }
+
+    .dish-desc {
+      font-size: clamp(0.85rem, 1vw, 0.92rem);
+      color: var(--text-dark-secondary);
+      line-height: 1.58;
+      margin-bottom: 18px;
+    }
+
+    .dish-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .dish-tag-chip {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(200, 138, 62, 0.12);
+      color: var(--bistro-amber);
+    }
+
+    .dish-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-add-dish {
+      padding: 8px 16px;
+      border-radius: 9999px;
+      border: 1px solid var(--border-light);
+      background: #FFFFFF;
+      color: var(--bistro-dark);
+      font-size: clamp(0.78rem, 0.9vw, 0.84rem);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-add-dish:hover {
+      background: var(--bistro-amber);
+      color: #FFFFFF;
+      border-color: var(--bistro-amber);
+    }
+
+    /* ==========================================================================
+       SECCIÓN: FILOSOFÍA & EXPERIENCIA (FONDO OSCURO BISTRO)
+       ========================================================================== */
+    .experience-section {
+      padding: 120px 0;
+      background-color: var(--bistro-dark);
+      color: #FFFFFF;
+      position: relative;
+    }
+
+    .experience-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .experience-content h2 {
+      font-size: clamp(2.2rem, 3.6vw, 3.4rem);
+      margin-bottom: 20px;
+      color: #FFFFFF;
+    }
+
+    .experience-content p {
+      font-size: clamp(0.98rem, 1.2vw, 1.1rem);
+      color: var(--text-light-secondary);
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .pillar-card {
+      background: var(--bistro-dark-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 18px;
+      padding: 24px 20px;
+      backdrop-filter: blur(16px);
+      transition: var(--transition-smooth);
+    }
+
+    .pillar-card:hover {
+      border-color: var(--bistro-amber);
+      transform: translateY(-4px);
+      background: var(--bistro-dark-elevated);
+    }
+
+    .pillar-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(200, 138, 62, 0.18);
+      display: grid;
+      place-items: center;
+      color: var(--bistro-amber);
+      margin-bottom: 14px;
+    }
+
+    .pillar-card h4 {
+      font-size: clamp(1.05rem, 1.3vw, 1.15rem);
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+
+    .pillar-card p {
+      font-size: clamp(0.82rem, 0.95vw, 0.88rem);
+      color: var(--text-light-secondary);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ==========================================================================
+       SECCIÓN: RESERVA DE MESA ONLINE
+       ========================================================================== */
+    .reservation-section {
+      padding: 120px 0;
+      background-color: var(--bistro-sand);
+      position: relative;
+    }
+
+    .reservation-card {
+      background: var(--bistro-white);
+      border: 1px solid var(--border-light);
+      border-radius: 28px;
+      padding: 50px 44px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.05);
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 50px;
+      align-items: center;
+    }
+
+    .reservation-info h2 {
+      font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+      margin-bottom: 14px;
+    }
+
+    .reservation-info p {
+      color: var(--text-dark-secondary);
+      font-size: clamp(0.92rem, 1.1vw, 1rem);
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    .booking-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dark-primary);
+    }
+
+    .form-input, .form-select {
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-light);
+      background: var(--bistro-cream);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text-dark-primary);
+      outline: none;
+      transition: var(--transition-smooth);
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--bistro-amber);
+      box-shadow: 0 0 0 3px rgba(200, 138, 62, 0.15);
+      background: #FFFFFF;
+    }
+
+    /* ==========================================================================
+       DRAWER LATERAL DEL CARRITO
+       ========================================================================== */
+    .cart-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      background: var(--bistro-white);
+      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 26px;
+    }
+
+    .cart-drawer.open {
+      transform: translateX(0%);
+    }
+
+    .cart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .cart-items-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .cart-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--bistro-cream);
+      border-radius: 10px;
+    }
+
+    .cart-footer {
+      padding-top: 18px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .floating-cart-pill {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      padding: 11px 22px;
+      background: var(--bistro-dark);
+      color: #FFFFFF;
+      border-radius: 9999px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 400;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .floating-cart-pill:hover {
+      transform: translateY(-3px) scale(1.03);
+      background: var(--bistro-amber);
+    }
+
+    .cart-badge-count {
+      width: 20px;
+      height: 20px;
+      background: var(--bistro-amber);
+      color: #FFFFFF;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .floating-cart-pill:hover .cart-badge-count {
+      background: #FFFFFF;
+      color: var(--bistro-dark);
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .footer {
+      background-color: var(--bistro-dark);
+      color: #FFFFFF;
+      padding: 80px 0 32px 0;
+      border-top: 1px solid var(--border-dark);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    .footer-brand h3 {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 2vw, 1.7rem);
+      margin-bottom: 12px;
+    }
+
+    .footer-brand p {
+      color: var(--text-light-secondary);
+      font-size: clamp(0.85rem, 1vw, 0.92rem);
+      max-width: 340px;
+      line-height: 1.6;
+    }
+
+    .footer-col h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--bistro-amber);
+      margin-bottom: 18px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-links a {
+      color: var(--text-light-secondary);
+      text-decoration: none;
+      font-size: clamp(0.82rem, 0.95vw, 0.88rem);
+      transition: var(--transition-smooth);
+    }
+
+    .footer-links a:hover {
+      color: var(--bistro-amber);
+      transform: translateX(4px);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-dark);
+      color: var(--text-light-secondary);
+      font-size: 0.82rem;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN (MÓVILES Y TABLETS)
+       ========================================================================== */
+    @media (max-width: 992px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-subtitle {
+        margin: 0 auto 30px auto;
+      }
+      .hero-actions, .hero-stats {
+        justify-content: center;
+      }
+      .experience-grid {
+        grid-template-columns: 1fr;
+      }
+      .reservation-card {
+        grid-template-columns: 1fr;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .nav-menu {
+        display: none;
+      }
+      .hero-image-wrap {
+        height: 280px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header {
+        padding: 12px 18px;
+      }
+      .booking-form {
+        grid-template-columns: 1fr;
+      }
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      .dishes-grid {
+        grid-template-columns: 1fr;
+      }
+      .reservation-card {
+        padding: 30px 20px;
+      }
+      .floating-cart-pill {
+        bottom: 20px;
+        left: 20px;
+        padding: 10px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Canvas 3D de Fondo WebGL (Three.js Partículas & Brasas Doradas) -->
+  <canvas id="webgl-bg"></canvas>
+
+  <!-- Cursor Personalizado -->
+  <div class="custom-cursor" id="custom-cursor"></div>
+  <div class="custom-cursor-follower" id="cursor-follower"></div>
+
+  <!-- HEADER & BARRA SUPERIOR -->
+  <header class="header" id="header">
+    <a href="#" class="brand-logo">
+      <span>MONTFORT <span class="accent">Bistro</span></span>
+    </a>
+
+    <ul class="nav-menu">
+      <li><a href="#menu" class="nav-link">Desayunos</a></li>
+      <li><a href="#menu" class="nav-link">Almuerzos</a></li>
+      <li><a href="#experience" class="nav-link">Filosofía</a></li>
+      <li><a href="#reservations" class="nav-link">Reservas</a></li>
+    </ul>
+
+    <div class="header-actions">
+      <div class="status-badge" id="live-service-badge">
+        <span class="status-dot"></span>
+        <span id="service-status-text">Servicio de Almuerzo Activo</span>
+      </div>
+
+      <a href="#reservations" class="btn-reserve">
+        <i data-lucide="calendar" style="width: 15px; height: 15px;"></i>
+        <span>Reservar Mesa</span>
+      </a>
+    </div>
+  </header>
+
+
+  <main>
+    <!-- HERO SECTION CON TILT 3D GASTRONÓMICO & FOTOGRAFÍA -->
+    <section class="hero-section" id="hero">
+      <div class="container">
+        <div class="hero-grid">
+          
+          <div class="hero-content">
+            <span class="hero-tag">Cocina de Origen & Café de Especialidad</span>
+            
+            <h1 class="hero-title">
+              El arte del <em>desayuno</em> & <em>almuerzo</em> de autor.
+            </h1>
+
+            <p class="hero-subtitle">
+              Ingredientes frescos cosechados cada amanecer, pan de masa madre horneado al momento y platos preparados con maestría culinaria para deleitar tus mañanas y tardes.
+            </p>
+
+            <div class="hero-actions">
+              <a href="#menu" class="btn-reserve" style="padding: 13px 28px; font-size: 0.92rem;">
+                <i data-lucide="utensils" style="width: 17px; height: 17px;"></i>
+                <span>Ver Menú Digital</span>
+              </a>
+              
+              <a href="#reservations" class="btn-secondary-outline">
+                <i data-lucide="clock" style="width: 16px; height: 16px; color: var(--bistro-amber);"></i>
+                <span>Horario: 7:00 AM – 4:30 PM</span>
+              </a>
+            </div>
+
+            <div class="hero-stats">
+              <div class="stat-item">
+                <h4>100%</h4>
+                <p>Orgánico & Local</p>
+              </div>
+              <div class="stat-item">
+                <h4>24h</h4>
+                <p>Fermentación Lenta</p>
+              </div>
+              <div class="stat-item">
+                <h4>4.9 ★</h4>
+                <p>Guía Gourmet 2026</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Escenario 3D con Fotografía Gourmet Realista -->
+          <div class="hero-3d-stage">
+            
+            <div class="dish-badge-floating badge-top-left">
+              <i data-lucide="sparkles" style="color: var(--bistro-amber); width: 15px; height: 15px;"></i>
+              <span>Recomendación del Chef</span>
+            </div>
+
+            <div class="dish-card-3d" id="hero-dish-card">
+              <div class="hero-image-wrap">
+                <img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1000&q=80" alt="Toast de Masa Madre con Huevo Poché y Aguacate" loading="lazy" />
+              </div>
+              
+              <div class="hero-card-details">
+                <div>
+                  <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2px;">Toast de Masa Madre & Trufa</h3>
+                  <p style="font-size: 0.85rem; color: var(--text-dark-secondary);">Huevo poché de granja, aguacate hass y microgreens</p>
+                </div>
+                <div style="font-family: var(--font-accent); font-size: 1.4rem; font-weight: 800; color: var(--bistro-amber);">$13.50</div>
+              </div>
+            </div>
+
+            <div class="dish-badge-floating badge-bottom-right">
+              <i data-lucide="award" style="color: var(--bistro-amber); width: 15px; height: 15px;"></i>
+              <span>Cosecha del Día</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SECCIÓN: MENÚ DIGITAL CON FOTOGRAFÍAS REALISTAS -->
+    <section class="menu-section" id="menu">
+      <div class="container">
+        
+        <div class="menu-header">
+          <span class="tag">Nuestra Carta de Temporada</span>
+          <h2>Sabores elaborados para cada momento del día.</h2>
+          <p style="color: var(--text-dark-secondary); font-size: clamp(0.95rem, 1.2vw, 1.08rem);">
+            Selecciona la categoría para explorar nuestras creaciones matutinas y platos fuertes del mediodía.
+          </p>
+        </div>
+
+        <!-- Pestañas de Filtro -->
+        <div class="meal-tabs-container">
+          <button class="meal-tab active" onclick="filterMenu('todos', this)">
+            <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
+            <span>Carta Completa</span>
+          </button>
+          
+          <button class="meal-tab" onclick="filterMenu('desayuno', this)">
+            <i data-lucide="sun" style="width: 17px; height: 17px;"></i>
+            <span>Desayunos & Brunch (7:00 - 12:00)</span>
+          </button>
+          
+          <button class="meal-tab" onclick="filterMenu('almuerzo', this)">
+            <i data-lucide="soup" style="width: 17px; height: 17px;"></i>
+            <span>Almuerzos Ejecutivos & Autor (12:00 - 16:30)</span>
+          </button>
+
+          <button class="meal-tab" onclick="filterMenu('bebidas', this)">
+            <i data-lucide="coffee" style="width: 17px; height: 17px;"></i>
+            <span>Cafetería & Bebidas</span>
+          </button>
+        </div>
+
+        <!-- Rejilla de Platos con Imágenes -->
+        <div class="dishes-grid" id="dishes-container">
+          
+          <!-- 01: Eggs Benedictine Royal -->
+          <div class="dish-card" data-category="desayuno">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1608039829572-78524f79c4c7?auto=format&fit=crop&w=800&q=80" alt="Eggs Benedictine Royal" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Eggs Benedictine Royal</h3>
+                  <div class="dish-price">$14.50</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Especialidad</span>
+                  <span class="dish-tag-chip">Salmón Curado</span>
+                </div>
+                <p class="dish-desc">
+                  Huevos pochados sobre brioche artesanal, salmón curado en casa con eneldo, espinacas baby y salsa holandesa trufada.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 12 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Eggs Benedictine Royal', 14.50)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 02: Pancakes de Avena & Frutos Rojos -->
+          <div class="dish-card" data-category="desayuno">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80" alt="Pancakes de Avena" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Pancakes de Avena & Frutos</h3>
+                  <div class="dish-price">$11.00</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Sin Gluten</span>
+                  <span class="dish-tag-chip">Vegano</span>
+                </div>
+                <p class="dish-desc">
+                  Harina de avena y almendras, compota tibia de moras silvestres, sirope de arce orgánico y crema batida de coco.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 10 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Pancakes de Avena & Frutos', 11.00)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 03: Shakshuka Tradicional -->
+          <div class="dish-card" data-category="desayuno">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=800&q=80" alt="Shakshuka Tradicional" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Shakshuka en Hierro Fundido</h3>
+                  <div class="dish-price">$12.50</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Orgánico</span>
+                  <span class="dish-tag-chip">Vegetariano</span>
+                </div>
+                <p class="dish-desc">
+                  Huevos horneados con salsa especiada de tomates asados, pimientos caramelizados, queso feta y pan pita recién horneado.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 15 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Shakshuka en Hierro', 12.50)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 04: Risotto de Hongos Porcini -->
+          <div class="dish-card" data-category="almuerzo">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=800&q=80" alt="Risotto de Hongos Porcini" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Risotto Porcini & Trufa Blanca</h3>
+                  <div class="dish-price">$18.50</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Plato Fuerte</span>
+                  <span class="dish-tag-chip">Gourmet</span>
+                </div>
+                <p class="dish-desc">
+                  Arroz Carnaroli cremoso con selección de hongos silvestres, vino blanco, Parmigiano Reggiano 24 meses y aceite de trufa blanca.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 20 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Risotto Porcini & Trufa', 18.50)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 05: Salmón Noruego a la Leña -->
+          <div class="dish-card" data-category="almuerzo">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80" alt="Salmón Noruego a la Leña" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Salmón Noruego a la Leña</h3>
+                  <div class="dish-price">$21.00</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Pesca Sostenible</span>
+                  <span class="dish-tag-chip">Keto</span>
+                </div>
+                <p class="dish-desc">
+                  Filete sellado a fuego lento sobre puré de coliflor trufado, espárragos verdes asados y emulsión cítrica de maracuyá.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 18 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Salmón Noruego a la Leña', 21.00)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 06: Bife de Chorizo Angus -->
+          <div class="dish-card" data-category="almuerzo">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80" alt="Bife de Chorizo Angus" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Bife de Chorizo Angus Steak</h3>
+                  <div class="dish-price">$24.00</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Corte Premium</span>
+                  <span class="dish-tag-chip">350g</span>
+                </div>
+                <p class="dish-desc">
+                  Corte madurado 30 días, asado a punto con papas rústicas al romero, chimichurri artesanal y vegetales glaseados.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 22 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Bife de Chorizo Angus', 24.00)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 07: Flat White Geisha -->
+          <div class="dish-card" data-category="bebidas">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80" alt="Flat White Geisha" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Flat White Geisha 88 SCA</h3>
+                  <div class="dish-price">$4.50</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Café de Origen</span>
+                  <span class="dish-tag-chip">Especialidad</span>
+                </div>
+                <p class="dish-desc">
+                  Café cosechado a 1,800m con notas florales a jazmín y durazno, emulsionado con leche texturizada sedosa.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 5 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Flat White Geisha', 4.50)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 08: Green Detox Juice -->
+          <div class="dish-card" data-category="bebidas">
+            <div class="dish-img-container">
+              <img src="https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=800&q=80" alt="Green Detox Juice" loading="lazy" />
+            </div>
+            <div class="dish-body">
+              <div>
+                <div class="dish-card-header">
+                  <h3 class="dish-title">Green Detox Cold-Pressed</h3>
+                  <div class="dish-price">$5.50</div>
+                </div>
+                <div class="dish-tags">
+                  <span class="dish-tag-chip">Prensado en Frío</span>
+                  <span class="dish-tag-chip">Sin Azúcar</span>
+                </div>
+                <p class="dish-desc">
+                  Manzana verde orgánica, espinaca fresca, pepino persa, jengibre, apio y limón eureka recién exprimido.
+                </p>
+              </div>
+              <div class="dish-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-dark-secondary);">Prep: 3 min</span>
+                <button class="btn-add-dish" onclick="addToCart('Green Detox Juice', 5.50)">
+                  <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                  <span>Añadir a Orden</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- SECCIÓN: FILOSOFÍA & EXPERIENCIA (FONDO OSCURO BISTRO) -->
+    <section class="experience-section" id="experience">
+      <div class="container">
+        <div class="experience-grid">
+          
+          <div class="experience-content">
+            <span style="color: var(--bistro-amber); font-family: var(--font-accent); font-weight: 700; text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.2em; display: block; margin-bottom: 14px;">
+              De la Granja a tu Mesa
+            </span>
+            <h2>El respeto absoluto por el producto y el tiempo.</h2>
+            <p>
+              Creemos que una gran comida comienza horas antes de que abras los ojos: en la fermentación paciente de nuestras masas, en la recolección matutina de hortalizas y en el tueste artesanal de granos de café de altura.
+            </p>
+            <a href="#reservations" class="btn-reserve" style="background: #FFFFFF; color: var(--bistro-dark);">
+              <span>Reservar una Experiencia</span>
+              <i data-lucide="arrow-right" style="width: 15px; height: 15px;"></i>
+            </a>
+          </div>
+
+          <div class="pillars-grid">
+            <div class="pillar-card">
+              <div class="pillar-icon"><i data-lucide="wheat"></i></div>
+              <h4>Masa Madre 100% Viva</h4>
+              <p>Fermentaciones lentas de 24 a 36 horas para una digestibilidad insuperable y corteza crujiente.</p>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-icon"><i data-lucide="sprout"></i></div>
+              <h4>Huerto Agroecológico</h4>
+              <p>Vegetales e hierbas aromáticas cultivados sin pesticidas en nuestros propios campos asociados.</p>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-icon"><i data-lucide="coffee"></i></div>
+              <h4>Micro-Lotes de Café</h4>
+              <p>Trazabilidad directa con familias productoras de café de especialidad de comercio justo.</p>
+            </div>
+
+            <div class="pillar-card">
+              <div class="pillar-icon"><i data-lucide="heart-handshake"></i></div>
+              <h4>Hospitalidad Serena</h4>
+              <p>Un espacio arquitectónico acogedor con luz natural y música ambiental diseñada para disfrutar sin prisas.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SECCIÓN: RESERVA DE MESA ONLINE -->
+    <section class="reservation-section" id="reservations">
+      <div class="container">
+        
+        <div class="reservation-card">
+          <div class="reservation-info">
+            <span style="color: var(--bistro-amber); font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.15em;">Experiencia Garantizada</span>
+            <h2>Reserva tu mesa en segundos.</h2>
+            <p>
+              Garantiza tu lugar para desayunos de negocios, brunch de fin de semana o almuerzos ejecutivos. Recibirás confirmación instantánea en tu teléfono.
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; color: var(--text-dark-secondary); font-size: 0.92rem;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i data-lucide="map-pin" style="color: var(--bistro-amber); width: 17px; height: 17px;"></i>
+                <span>Av. de las Palmas 450, Distrito Gourmet</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i data-lucide="phone" style="color: var(--bistro-amber); width: 17px; height: 17px;"></i>
+                <span>+1 (555) 839-2041</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario de Reserva -->
+          <form class="booking-form" onsubmit="handleReservationSubmit(event)">
+            <div class="form-group">
+              <label class="form-label">Nombre Completo</label>
+              <input type="text" class="form-input" placeholder="Ej. Carlos Mendoza" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Teléfono / WhatsApp</label>
+              <input type="tel" class="form-input" placeholder="+1 555 000-0000" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fecha</label>
+              <input type="date" class="form-input" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Horario</label>
+              <select class="form-select" required>
+                <option value="">Selecciona hora</option>
+                <optgroup label="Desayunos">
+                  <option>08:00 AM</option>
+                  <option>09:30 AM</option>
+                  <option>11:00 AM</option>
+                </optgroup>
+                <optgroup label="Almuerzos">
+                  <option>12:30 PM</option>
+                  <option>01:30 PM</option>
+                  <option>03:00 PM</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Número de Comensales</label>
+              <select class="form-select">
+                <option>2 Personas</option>
+                <option>3 a 4 Personas</option>
+                <option>5 a 8 Personas</option>
+                <option>Mesa Ejecutiva (8+)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Ambiente Deseado</label>
+              <select class="form-select">
+                <option>Terraza Jardín</option>
+                <option>Salón Principal Climatizado</option>
+                <option>Barra Cafetera</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width" style="margin-top: 6px;">
+              <button type="submit" class="btn-reserve" style="width: 100%; padding: 14px; justify-content: center;">
+                <span>Confirmar Solicitud de Reserva</span>
+                <i data-lucide="check-circle" style="width: 17px; height: 17px;"></i>
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+
+  <!-- DRAWER DEL CARRITO -->
+  <div class="cart-drawer" id="cart-drawer">
+    <div>
+      <div class="cart-header">
+        <h3 style="font-size: 1.3rem;">Tu Orden Actual</h3>
+        <button onclick="toggleCart(false)" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-dark-primary);">&times;</button>
+      </div>
+
+      <div class="cart-items-list" id="cart-items-container">
+        <p style="color: var(--text-dark-secondary); text-align: center; margin-top: 40px;">No has agregado platos aún.</p>
+      </div>
+    </div>
+
+    <div class="cart-footer">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 18px; font-size: 1.15rem; font-weight: 800;">
+        <span>Total:</span>
+        <span id="cart-total-price" style="color: var(--bistro-amber);">$0.00</span>
+      </div>
+
+      <button class="btn-reserve" style="width: 100%; padding: 13px; justify-content: center;" onclick="checkoutOrder()">
+        <span>Enviar Pedido a Cocina / WhatsApp</span>
+        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- PÍLDORA FLOTANTE DEL CARRITO -->
+  <div class="floating-cart-pill" onclick="toggleCart(true)">
+    <i data-lucide="shopping-bag" style="width: 18px; height: 18px;"></i>
+    <span style="font-weight: 700; font-size: 0.85rem;">Orden Digital</span>
+    <span class="cart-badge-count" id="cart-count-badge">0</span>
+  </div>
+
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <div class="footer-brand">
+          <h3>MONTFORT BISTRO</h3>
+          <p>Un santuario culinario para quienes aprecian la comida reconfortante, ingredientes nobles y el arte de un café perfecto.</p>
+          
+          <div style="margin-top: 18px; color: var(--bistro-amber); font-weight: 700; font-size: 0.85rem;">
+            Desayunos: 7:00 AM – 12:00 PM<br/>
+            Almuerzos: 12:00 PM – 4:30 PM
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navegación</h4>
+          <ul class="footer-links">
+            <li><a href="#hero">Inicio</a></li>
+            <li><a href="#menu">Menú de Desayunos</a></li>
+            <li><a href="#menu">Menú de Almuerzos</a></li>
+            <li><a href="#reservations">Reservaciones</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Experiencia</h4>
+          <ul class="footer-links">
+            <li><a href="#experience">Origen de Ingredientes</a></li>
+            <li><a href="#experience">Café de Especialidad</a></li>
+            <li><a href="#">Eventos Privados</a></li>
+            <li><a href="#">Catering Corporativo</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Ubicación & Contacto</h4>
+          <ul class="footer-links">
+            <li><a href="#">Av. Palmas 450, CDMX</a></li>
+            <li><a href="#">contacto@montfortbistro.com</a></li>
+            <li><a href="#">Tel: +1 (555) 839-2041</a></li>
+            <li><a href="#">Instagram: @montfort.bistro</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 Montfort Bistro & Brunch Co. Todos los derechos reservados.</p>
+        <p style="display: flex; gap: 20px;">
+          <a href="#" style="color: inherit; text-decoration: none;">Aviso de Privacidad</a>
+          <a href="#" style="color: inherit; text-decoration: none;">Términos de Servicio</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ==========================================================================
+       SCRIPTS: THREE.JS BRASAS 3D, TILT, FILTROS Y CARRITO
+       ========================================================================== -->
+  <script>
+    lucide.createIcons();
+
+    // 1. Motor 3D WebGL con Three.js: Partículas de Brasas y Especias Flotantes
+    const canvas = document.getElementById('webgl-bg');
+    if (canvas && window.THREE) {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 120;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Creación de Partículas Cálidas Flotantes
+      const particleCount = 180;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const speeds = new Float32Array(particleCount);
+
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 220;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 180;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+        speeds[i] = Math.random() * 0.12 + 0.04;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.PointsMaterial({
+        color: 0xC88A3E,
+        size: 3.2,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending
+      });
+
+      const particleSystem = new THREE.Points(geometry, material);
+      scene.add(particleSystem);
+
+      let mouseX = 0, mouseY = 0;
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 20;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const pos = geometry.attributes.position.array;
+
+        for (let i = 0; i < particleCount; i++) {
+          pos[i * 3 + 1] += speeds[i];
+          if (pos[i * 3 + 1] > 90) pos[i * 3 + 1] = -90;
+        }
+        geometry.attributes.position.needsUpdate = true;
+
+        particleSystem.rotation.y += 0.0008;
+        camera.position.x += (mouseX - camera.position.x) * 0.04;
+        camera.position.y += (-mouseY - camera.position.y) * 0.04;
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // 2. Efecto 3D Tilt en el Plato del Hero
+    const heroCard = document.getElementById('hero-dish-card');
+    const heroSection = document.getElementById('hero');
+
+    if (heroSection && heroCard) {
+      heroSection.addEventListener('mousemove', (e) => {
+        const rect = heroSection.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+
+        const rotateX = (-y / rect.height) * 18;
+        const rotateY = (x / rect.width) * 18;
+
+        heroCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      });
+
+      heroSection.addEventListener('mouseleave', () => {
+        heroCard.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      });
+    }
+
+    // 3. Cursor Personalizado
+    const cursor = document.getElementById('custom-cursor');
+    const follower = document.getElementById('cursor-follower');
+    let mX = window.innerWidth / 2, mY = window.innerHeight / 2;
+    let fX = mX, fY = mY;
+
+    window.addEventListener('mousemove', (e) => {
+      mX = e.clientX;
+      mY = e.clientY;
+      if (cursor) {
+        cursor.style.left = mX + 'px';
+        cursor.style.top = mY + 'px';
+      }
+    });
+
+    function animateCursor() {
+      fX += (mX - fX) * 0.16;
+      fY += (mY - fY) * 0.16;
+      if (follower) {
+        follower.style.left = fX + 'px';
+        follower.style.top = fY + 'px';
+      }
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    document.querySelectorAll('a, button, .dish-card, .meal-tab').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
+
+    // 4. Filtrado Dinámico del Menú
+    function filterMenu(category, btn) {
+      document.querySelectorAll('.meal-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.dish-card');
+      cards.forEach(card => {
+        if (category === 'todos' || card.getAttribute('data-category') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // 5. Carrito de Pedidos Digital
+    let cart = [];
+    const cartDrawer = document.getElementById('cart-drawer');
+    const cartItemsContainer = document.getElementById('cart-items-container');
+    const cartTotalPrice = document.getElementById('cart-total-price');
+    const cartCountBadge = document.getElementById('cart-count-badge');
+
+    function toggleCart(open) {
+      if (open) {
+        cartDrawer.classList.add('open');
+      } else {
+        cartDrawer.classList.remove('open');
+      }
+    }
+
+    function addToCart(title, price) {
+      cart.push({ title, price });
+      updateCartUI();
+      toggleCart(true);
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      cartCountBadge.textContent = cart.length;
+
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p style="color: var(--text-dark-secondary); text-align: center; margin-top: 40px;">No has agregado platos aún.</p>';
+        cartTotalPrice.textContent = '$0.00';
+        return;
+      }
+
+      let total = 0;
+      cartItemsContainer.innerHTML = '';
+
+      cart.forEach((item, index) => {
+        total += item.price;
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+          <div>
+            <div style="font-weight: 700; font-size: 0.92rem;">${item.title}</div>
+            <div style="color: var(--bistro-amber); font-weight: 700; font-size: 0.82rem;">$${item.price.toFixed(2)}</div>
+          </div>
+          <button onclick="removeFromCart(${index})" style="background: none; border: none; color: #B8502E; cursor: pointer; font-size: 1.1rem;">&times;</button>
+        `;
+        cartItemsContainer.appendChild(row);
+      });
+
+      cartTotalPrice.textContent = `$${total.toFixed(2)}`;
+    }
+
+    function checkoutOrder() {
+      if (cart.length === 0) {
+        alert('Tu orden está vacía.');
+        return;
+      }
+      alert(`¡Gracias! Tu orden por $${cart.reduce((a, b) => a + b.price, 0).toFixed(2)} ha sido enviada a la cocina.`);
+      cart = [];
+      updateCartUI();
+      toggleCart(false);
+    }
+
+    // 6. Formulario de Reserva
+    function handleReservationSubmit(e) {
+      e.preventDefault();
+      alert('¡Mesa reservada con éxito en Montfort Bistro! Hemos enviado los detalles a tu contacto.');
+      e.target.reset();
+    }
+
+    // 7. Barra de Navegación Scrolled
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('header');
+      if (window.scrollY > 40) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // 8. Detección de Turno en Tiempo Real
+    function updateServiceStatus() {
+      const now = new Date();
+      const hours = now.getHours();
+      const statusText = document.getElementById('service-status-text');
+
+      if (hours >= 7 && hours < 12) {
+        statusText.textContent = 'Servicio de Desayunos Activo';
+      } else if (hours >= 12 && hours < 17) {
+        statusText.textContent = 'Servicio de Almuerzos Activo';
+      } else {
+        statusText.textContent = 'Cocina Cerrada • Abre 7:00 AM';
+      }
+    }
+    updateServiceStatus();
+  </script>
+</body>
+</html>
