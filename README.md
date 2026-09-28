@@ -1,14 +1,27 @@
 # Montfort Bistro
 
-Pagina web estatica para un bistro, con menu interactivo, carrito local y formulario de reserva simulado.
+![Vista previa de Montfort Bistro](docs/preview.png)
+
+Sitio web responsive para un bistro, construido como una experiencia frontend ligera con menu, carrito local y formulario de reserva simulado.
+
+## Funcionalidades
+
+- Presentacion visual de marca para restaurante.
+- Menu interactivo con platos y precios.
+- Carrito local para simular una orden.
+- Formulario de reserva de mesa.
+- Servidor local simple en Node.js para revisar el proyecto sin configuraciones extra.
+
+## Stack
+
+- HTML5
+- CSS3
+- JavaScript
+- Node.js para servidor local estatico
 
 ## Ejecutar localmente
 
-Requisitos:
-
-- Node.js instalado
-
-Comando:
+Requiere Node.js instalado.
 
 ```bash
 node server.js
@@ -16,14 +29,21 @@ node server.js
 
 Luego abre:
 
-```text
+```txt
 http://localhost:3000
 ```
 
-El servidor cambia automaticamente al siguiente puerto disponible si `3000` esta ocupado.
+Si el puerto `3000` esta ocupado, el servidor usa automaticamente el siguiente puerto disponible.
 
-## Contenido
+## Estructura
 
-- `index.html`: pagina principal con estilos y JavaScript integrado.
-- `server.js`: servidor local simple para servir los archivos.
-- `iniciar-servidor.bat`: acceso rapido para iniciar en Windows.
+```txt
+.
+├── index.html
+├── server.js
+└── iniciar-servidor.bat
+```
+
+## Alcance
+
+El proyecto es una demo frontend. No incluye pagos reales, reservas persistentes ni base de datos.
